@@ -1,0 +1,13 @@
+id: "POL-002"
+name: "Data Retention & Disposal"
+version: "1.0.0"
+effective_date: "2025-01-01"
+review_date: "2026-01-01"
+owner: "Data Governance Team"
+status: "active"
+description: "Defines retention schedules and secure disposal requirements for all data categories."
+tags:
+  - retention
+  - disposal
+  - lifecycle
+  - data

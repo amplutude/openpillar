@@ -16,3 +16,5 @@ tags:
   - identity
   - mfa
   - authentication
+policy_refs:
+  - "POL-003"

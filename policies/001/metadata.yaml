@@ -1,0 +1,13 @@
+id: "POL-001"
+name: "Data Classification Standard"
+version: "1.0.0"
+effective_date: "2025-01-01"
+review_date: "2026-01-01"
+owner: "Data Governance Team"
+status: "active"
+description: "Defines the mandatory classification framework for all organisational data assets by sensitivity and regulatory obligation."
+tags:
+  - data
+  - classification
+  - sensitivity
+  - labelling

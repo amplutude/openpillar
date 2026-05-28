@@ -14,3 +14,5 @@ tags:
   - classification
   - sensitivity
   - labelling
+policy_refs:
+  - "POL-001"

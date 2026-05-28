@@ -1,0 +1,13 @@
+id: "POL-003"
+name: "Multi-Factor Authentication Requirement"
+version: "1.0.0"
+effective_date: "2025-01-01"
+review_date: "2026-01-01"
+owner: "Security Engineering"
+status: "active"
+description: "Mandates multi-factor authentication for all privileged and sensitive system access."
+tags:
+  - security
+  - mfa
+  - authentication
+  - identity

@@ -16,3 +16,5 @@ tags:
   - retention
   - disposal
   - lifecycle
+policy_refs:
+  - "POL-002"
