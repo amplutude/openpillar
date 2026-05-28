@@ -5,6 +5,20 @@ def load_yaml(path):
     with path.open() as f:
         return yaml.safe_load(f) or {}
 
+def load_config(repo_root: Path) -> dict:
+    """Load config.yaml from repo root and resolve template references."""
+    config_path = repo_root / "config.yaml"
+    config = load_yaml(config_path)
+    # Resolve {{ repos.policy_repo }} and {{ repos.app_repo }} in footer links
+    policy_repo = config.get("repos", {}).get("policy_repo", "")
+    app_repo = config.get("repos", {}).get("app_repo", "")
+    for link in config.get("footer", {}).get("links", []):
+        url = link.get("url", "")
+        url = url.replace("{{ repos.policy_repo }}", policy_repo)
+        url = url.replace("{{ repos.app_repo }}", app_repo)
+        link["url"] = url
+    return config
+
 def load_markdown(path):
     with path.open() as f:
         return f.read()

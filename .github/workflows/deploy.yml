@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - develop
+  repository_dispatch:
+    types: [policy-update]
 
 jobs:
   deploy:
@@ -25,13 +27,23 @@ jobs:
       - name: Determine environment
         id: env
         run: |
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          REF="${{ github.ref }}"
+          # repository_dispatch from policy repo always deploys to production
+          if [ "${{ github.event_name }}" = "repository_dispatch" ] || [ "$REF" = "refs/heads/main" ]; then
             echo "ENV=production" >> $GITHUB_ENV
             echo "S3_BUCKET=${{ secrets.S3_BUCKET_PROD }}" >> $GITHUB_ENV
           else
             echo "ENV=test" >> $GITHUB_ENV
             echo "S3_BUCKET=${{ secrets.S3_BUCKET_TEST }}" >> $GITHUB_ENV
           fi
+
+      - name: Log policy repo trigger (if dispatched)
+        if: github.event_name == 'repository_dispatch'
+        run: |
+          echo "Triggered by policy repo update"
+          echo "  ref: ${{ github.event.client_payload.ref }}"
+          echo "  sha: ${{ github.event.client_payload.sha }}"
+          echo "  source: ${{ github.event.client_payload.triggered_by }}"
 
       - name: Build site
         run: python scripts/build.py --env ${{ env.ENV }}
@@ -65,4 +77,7 @@ jobs:
           echo "- **Built at:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
           if [ "${{ env.S3_BUCKET }}" != "" ]; then
             echo "- **URL:** http://${{ env.S3_BUCKET }}.s3-website-${{ secrets.AWS_REGION }}.amazonaws.com" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "- **Triggered by:** policy repo push (${{ github.event.client_payload.ref }})" >> $GITHUB_STEP_SUMMARY
           fi

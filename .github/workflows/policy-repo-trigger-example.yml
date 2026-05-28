@@ -1,0 +1,45 @@
+# ──────────────────────────────────────────────────────────────────
+# COPY THIS FILE into your policy repository at:
+#   .github/workflows/trigger-openpillar-build.yml
+#
+# Prerequisites:
+#   1. Create a GitHub Personal Access Token (PAT) with `repo` scope
+#      on the OpenPillar app repo (amplutude/openpillar).
+#   2. Add it as a secret named OPENPILLAR_DEPLOY_TOKEN in the
+#      policy repo settings.
+#
+# How it works:
+#   When a commit is pushed to the policy repo's `main` branch,
+#   this workflow fires a `repository_dispatch` event on the app repo.
+#   The app repo's deploy.yml picks it up, checks out its own code,
+#   fetches the latest policy content (via checkout or S3 sync —
+#   see app repo README), builds the static site, and deploys to S3.
+# ──────────────────────────────────────────────────────────────────
+
+name: Trigger OpenPillar Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch build to OpenPillar app repo
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.OPENPILLAR_DEPLOY_TOKEN }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'amplutude',
+              repo: 'openpillar',
+              event_type: 'policy-update',
+              client_payload: {
+                ref: context.ref,
+                sha: context.sha,
+                triggered_by: context.repo.repo
+              }
+            });
+            console.log('Dispatched policy-update event to amplutude/openpillar');

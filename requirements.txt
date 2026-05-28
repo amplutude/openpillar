@@ -1,2 +1,3 @@
 pyyaml>=6.0
 boto3>=1.34
+markdown>=3.5
