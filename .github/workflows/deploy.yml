@@ -1,0 +1,68 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "ENV=production" >> $GITHUB_ENV
+            echo "S3_BUCKET=${{ secrets.S3_BUCKET_PROD }}" >> $GITHUB_ENV
+          else
+            echo "ENV=test" >> $GITHUB_ENV
+            echo "S3_BUCKET=${{ secrets.S3_BUCKET_TEST }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build site
+        run: python scripts/build.py --env ${{ env.ENV }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Archive policy versions
+        run: python scripts/archive_versions.py --bucket ${{ env.S3_BUCKET }} --region ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: aws s3 sync dist/ s3://${{ env.S3_BUCKET }}/ --delete --cache-control "max-age=300"
+
+      - name: Invalidate CloudFront (production only)
+        if: github.ref == 'refs/heads/main' && env.CF_DISTRIBUTION_ID != ''
+        env:
+          CF_DISTRIBUTION_ID: ${{ secrets.CF_DISTRIBUTION_ID }}
+        run: aws cloudfront create-invalidation --distribution-id $CF_DISTRIBUTION_ID --paths "/*"
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ env.ENV }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bucket:** ${{ env.S3_BUCKET }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Built at:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ env.S3_BUCKET }}" != "" ]; then
+            echo "- **URL:** http://${{ env.S3_BUCKET }}.s3-website-${{ secrets.AWS_REGION }}.amazonaws.com" >> $GITHUB_STEP_SUMMARY
+          fi
