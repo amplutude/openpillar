@@ -1,0 +1,12 @@
+id: "P-001"
+name: "Data Governance"
+description: "Controls governing the management, quality, and security of organisational data assets."
+version: "1.0.0"
+effective_date: "2025-01-01"
+review_date: "2026-01-01"
+owner: "Chief Data Officer"
+status: "active"
+tags:
+  - data
+  - governance
+  - privacy

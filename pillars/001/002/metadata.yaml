@@ -1,0 +1,18 @@
+id: "P-001-002"
+pillar_id: "P-001"
+name: "Data Retention & Disposal"
+description: "Defines retention schedules and secure disposal requirements for all data assets."
+version: "1.0.0"
+effective_date: "2025-03-01"
+review_date: "2026-03-01"
+owner: "Data Governance Team"
+status: "active"
+controls:
+  - id: "C-0002"
+    name: "Data Retention Schedule"
+  - id: "C-0003"
+    name: "Secure Data Disposal"
+tags:
+  - retention
+  - disposal
+  - lifecycle

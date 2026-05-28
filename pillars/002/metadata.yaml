@@ -1,0 +1,12 @@
+id: "P-002"
+name: "Security & Access Control"
+description: "Controls governing identity, access management, and security posture across all systems."
+version: "1.0.0"
+effective_date: "2025-01-01"
+review_date: "2026-01-01"
+owner: "Chief Information Security Officer"
+status: "active"
+tags:
+  - security
+  - identity
+  - access-control

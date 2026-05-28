@@ -1,0 +1,16 @@
+id: "P-001-001"
+pillar_id: "P-001"
+name: "Data Classification"
+description: "Defines standards for classifying data by sensitivity and handling requirements."
+version: "1.2.0"
+effective_date: "2025-01-01"
+review_date: "2026-01-01"
+owner: "Data Governance Team"
+status: "active"
+controls:
+  - id: "C-0001"
+    name: "Data Classification Policy"
+tags:
+  - classification
+  - sensitivity
+  - labelling

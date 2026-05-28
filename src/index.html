@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenPillar — Technology Governance Controls</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <div class="topnav__brand">
+      <span class="topnav__logo">⬡</span>
+      <span class="topnav__title">OpenPillar</span>
+      <span class="topnav__env" id="env-badge"></span>
+    </div>
+    <div class="topnav__search">
+      <input type="search" id="search" placeholder="Search controls, pillars…" autocomplete="off" />
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__loading" id="sidebar-loading">Loading…</div>
+      <nav class="sidebar__nav" id="sidebar-nav" hidden></nav>
+    </aside>
+
+    <main class="content" id="content">
+      <div class="welcome" id="welcome">
+        <h1>Technology Governance Controls</h1>
+        <p>Select a pillar or control from the sidebar to view its policy.</p>
+      </div>
+      <article class="policy-view" id="policy-view" hidden></article>
+    </main>
+  </div>
+
+  <script src="js/marked.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
