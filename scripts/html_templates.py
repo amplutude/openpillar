@@ -1,5 +1,15 @@
 """HTML template helpers for OpenPillar static site generation."""
-from urllib.parse import urlparse
+from html import escape as _escape
+
+
+def esc(value) -> str:
+    """HTML-escape a value for safe interpolation in text or attribute context.
+
+    Content can originate from the public policy repository (external PRs), so
+    every interpolated metadata value must pass through here. quote=True also
+    escapes quotes for safe use inside HTML attributes.
+    """
+    return _escape("" if value is None else str(value), quote=True)
 
 
 def svg_logo() -> str:
@@ -21,35 +31,37 @@ def relative_root(canonical: str, base_url: str) -> str:
 
 def head_meta(title: str, description: str, canonical: str, config: dict) -> str:
     """Returns <head> contents with full SEO meta tags."""
-    site_name = config["site"]["name"]
+    site_name = esc(config["site"]["name"])
     base_url = config["site"]["base_url"]
-    og_image = f"{base_url}/og-image.png"
     root = relative_root(canonical, base_url)
+    title_e = esc(title)
+    desc_e = esc(description)
+    canonical_e = esc(canonical)
     return f"""  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{title} | {site_name}</title>
-  <meta name="description" content="{description}">
-  <link rel="canonical" href="{canonical}">
+  <title>{title_e} | {site_name}</title>
+  <meta name="description" content="{desc_e}">
+  <link rel="canonical" href="{canonical_e}">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="{title}">
-  <meta property="og:description" content="{description}">
-  <meta property="og:url" content="{canonical}">
+  <meta property="og:title" content="{title_e}">
+  <meta property="og:description" content="{desc_e}">
+  <meta property="og:url" content="{canonical_e}">
   <meta property="og:site_name" content="{site_name}">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="{title}">
-  <meta name="twitter:description" content="{description}">
+  <meta name="twitter:title" content="{title_e}">
+  <meta name="twitter:description" content="{desc_e}">
   <link rel="stylesheet" href="{root}css/styles.css">"""
 
 
 def topnav(config: dict, canonical: str, edit_url: str = None) -> str:
     """Returns the top navigation bar HTML."""
-    policy_repo = config["repos"]["policy_repo"]
+    policy_repo = esc(config["repos"]["policy_repo"])
     root = relative_root(canonical, config["site"]["base_url"])
     logo_svg = svg_logo().replace('width="32" height="32"', 'width="28" height="28" class="topnav__logo-svg"')
     return f"""<nav class="topnav" role="navigation" aria-label="Main navigation">
   <a class="topnav__brand" href="{root}index.html">
     {logo_svg}
-    <span class="topnav__title">{config["site"]["logo_text"]}</span>
+    <span class="topnav__title">{esc(config["site"]["logo_text"])}</span>
     <span class="topnav__env" id="env-badge"></span>
   </a>
   <div class="topnav__nav">
@@ -72,11 +84,11 @@ def footer_html(config: dict) -> str:
     standards = config.get("standards", [])
 
     links_html = "\n".join(
-        f'        <li><a href="{link["url"]}" target="_blank" rel="noopener">{link["label"]}</a></li>'
+        f'        <li><a href="{esc(link["url"])}" target="_blank" rel="noopener">{esc(link["label"])}</a></li>'
         for link in links
     )
     standards_html = "\n".join(
-        f'        <li><a href="{s["url"]}" target="_blank" rel="noopener">{s["name"]}</a></li>'
+        f'        <li><a href="{esc(s["url"])}" target="_blank" rel="noopener">{esc(s["name"])}</a></li>'
         for s in standards
     )
     logo_svg = svg_logo()
@@ -85,8 +97,8 @@ def footer_html(config: dict) -> str:
     <div class="site-footer__brand">
       {logo_svg}
       <div>
-        <div style="font-weight:700;font-size:1.1rem;color:#fff;margin-bottom:0.5rem">{config["site"]["logo_text"]}</div>
-        <div style="font-size:0.85rem;color:#94a3b8;line-height:1.6">{config["site"]["description"]}</div>
+        <div style="font-weight:700;font-size:1.1rem;color:#fff;margin-bottom:0.5rem">{esc(config["site"]["logo_text"])}</div>
+        <div style="font-size:0.85rem;color:#94a3b8;line-height:1.6">{esc(config["site"]["description"])}</div>
       </div>
     </div>
     <div>
@@ -103,7 +115,7 @@ def footer_html(config: dict) -> str:
     </div>
   </div>
   <div class="site-footer__bottom">
-    <span>&copy; {copyright_text}</span>
+    <span>&copy; {esc(copyright_text)}</span>
     <span>Built with OpenPillar</span>
   </div>
 </footer>"""
@@ -114,10 +126,10 @@ def breadcrumb(crumbs: list) -> str:
     parts = []
     for i, (label, url) in enumerate(crumbs):
         if i < len(crumbs) - 1:
-            parts.append(f'<a href="{url}">{label}</a>')
+            parts.append(f'<a href="{esc(url)}">{esc(label)}</a>')
             parts.append('<span class="breadcrumb__sep" aria-hidden="true">/</span>')
         else:
-            parts.append(f'<span aria-current="page">{label}</span>')
+            parts.append(f'<span aria-current="page">{esc(label)}</span>')
     return f'<nav class="breadcrumb" aria-label="Breadcrumb">{"".join(parts)}</nav>'
 
 
@@ -133,7 +145,10 @@ def jsonld_article(name: str, description: str, url: str, date_published: str, d
         "datePublished": str(date_published) if date_published else "",
         "dateModified": str(date_modified) if date_modified else "",
     }
-    return f'<script type="application/ld+json">{json.dumps(data, indent=2)}</script>'
+    # Escape "<" so a value containing "</script>" cannot break out of the
+    # JSON-LD block (json.dumps does not escape it by default).
+    payload = json.dumps(data, indent=2).replace("<", "\\u003c")
+    return f'<script type="application/ld+json">{payload}</script>'
 
 
 def render_page(title: str, description: str, canonical: str, body_html: str,

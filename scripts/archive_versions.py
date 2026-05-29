@@ -4,13 +4,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from openpillar_utils import load_policy_registry
+from openpillar_utils import load_policy_registry, load_config
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--bucket", required=True)
     parser.add_argument("--region", default="us-east-1")
     args = parser.parse_args()
+
+    repo_root = Path(__file__).parent.parent
+    # Policies live in the public policy repo; link version history there.
+    policy_repo = load_config(repo_root).get("repos", {}).get(
+        "policy_repo", "https://github.com/amplutude/openpillar"
+    )
 
     try:
         import boto3
@@ -32,7 +38,6 @@ def main():
             previous = {"policies": {}}
 
         # Load newly built data
-        repo_root = Path(__file__).parent.parent
         dist_data_path = repo_root / "dist" / "data.json"
         if not dist_data_path.exists():
             print("dist/data.json not found, skipping archive", file=sys.stderr)
@@ -81,7 +86,7 @@ def main():
                 "name": pol.get("name", ""),
                 "deployed_at": now,
                 "archived_versions": archived,
-                "github_ref": "https://github.com/amplutude/openpillar",
+                "github_ref": policy_repo,
             }
 
         # Write manifest locally and to S3
